@@ -1,0 +1,145 @@
+# initializes the letters needed and the physical board
+letters = ["A", "B", "C", "D", "E", "F", "G", "H", "I"]
+go_board = [[" . " for _ in range(9)] for _ in range(9)]
+
+# prints opening message and rules then waits for the user to begin
+print(f'{"GO":=^20}')
+rules = [
+    "When a stone is placed, it must be placed on an empty point.",
+    "Take turns placing stones until someone enters 'stop'."
+]
+for i in range(len(rules)):
+    print(f"Rule #{i + 1}: {rules[i]}")
+    
+option = input("Press any button to start.")
+
+# clear_screen method to update the board with each turn taken
+import os
+def clear_screen():
+    os.system('cls' if os.name == 'nt' else 'clear')
+
+# sets up the numeric and alphabetical positions for the board (column headers A..I)
+def print_letters():
+    for letter in letters:
+        if letter == "A":
+            print("  ", letter, end="")
+        else:
+            if letter != "I":
+                print(" ", letter, end="")
+            else:
+                print(f"  {letter}")
+
+# plots a point (i-coord, letter) for each space on the board
+coords = []
+for i in range(len(go_board)):
+    for j in range(len(go_board[i])):
+        # point = (i-coord, letter[j])
+        point = (i + 1, letters[j])
+        coords.append(point)
+
+# method to control movement based on user input and whether the coordinate chosen exists
+def parse_move(move):
+    move = move.strip()
+    if len(move) < 2:
+        return None
+    
+    col_letter = move[0].upper()
+    row_str = move[1:]
+    
+    if col_letter not in letters or not row_str.isdigit():
+        return None
+    
+    row = int(row_str)
+    
+    if not (1 <= row <= 9):
+        return None
+    
+    col = letters.index(col_letter)
+    
+    return (row - 1, col), f"{col_letter}{row}"
+
+# prints the board to the screen as a non-list output
+def print_board():
+    print_letters()
+    print()
+    
+    for i in range(len(go_board)):
+        print(f"{i + 1:2d} " + "".join(go_board[i]))
+
+# turn/move tokens
+blank, white_stone, black_stone = " . ", chr(9675), chr(9679)
+
+# method to check if a user can place a stone on the space they selected
+def place_stone(board, rc, stone):
+    
+    # unpacks the current row and column into two distinct variables
+    r, c = rc
+    
+    # runs if the board is occupied at a given row and column 
+    if board[r][c] != blank:
+        return False
+    
+    # places a stone at the specified row and column if the space is free
+    board[r][c] = stone
+    return True
+
+# logic to switch the stone color with each turn the players take
+def switch_player(stone):
+    return black_stone if stone == white_stone else white_stone
+
+# tracks turns 
+current = white_stone
+
+# main loop to run the program
+while option != "stop":
+    clear_screen()
+    print_board()
+    
+    # displays who's turn it currently is
+    print(f"Current turn: {current}")
+    option = input("Enter a move like A5 or 'stop': ").strip()
+
+    if option.lower() == "stop":
+        break
+
+    parsed = parse_move(option)
+    
+    if not parsed:
+        print("Invalid input. Use like B7. Press Enter to continue...")
+        input()
+        
+        continue
+
+    rc, label = parsed
+    
+    if not place_stone(go_board, rc, current):
+        print("That point is already taken. Press Enter to continue...")
+        input()
+        
+        continue
+
+    # confirms each placement and swtiches turns
+    clear_screen()
+    print_board()
+    print(f"Placed {current.strip()} at {label}.")
+    current = switch_player(current)
+    
+    # variable to track who's turn is coming up
+    player = None
+    
+    # prints who's turn it now is to the user
+    if current.strip() == white_stone:
+        player = "black"
+    elif current.strip() == black_stone:
+        player = "white"
+        
+    print(f"It is now {player}'s turn.")
+    input("Press Enter to continue...")
+
+else:
+    print("...")
+
+# outputs final board display and a shutdown message
+clear_screen()
+print_board()
+print("Good game!")
